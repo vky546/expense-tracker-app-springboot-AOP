@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  mysql_db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: root 
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    expose:
+      - 6603
+    ports:
+      - 6603:3306
+    volumes:
+       - ./src/main/resources/mysql-dev.sql:/docker-entrypoint-initdb.d/mysql-dev.sql
+    networks:
+      - springboot-expense
+
+  spring-expense-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+       - mysql_db
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASS=${MYSQL_ROOT_PASSWORD}
+      - DB_SCHEMA=${MYSQL_DATABASE}
+      - ACTIVE_PROFILE=${ACTIVE_PROFILE}
+    links:
+      - mysql_db:mysql
+    ports:
+      - 7071:7071
+    networks:
+      - springboot-expense
+networks:
+  springboot-expense:
+    external: true
